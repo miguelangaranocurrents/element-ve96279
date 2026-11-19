@@ -64,6 +64,8 @@ import upgraderoom from "./upgraderoom/upgraderoom";
 import { emoticon } from "./emoticon";
 import { statusCommand } from "./status";
 import { SDKContextClass } from "../contexts/SDKContextClass.ts";
+import { htmlSerializeFromMdIfNeeded } from "../editor/serialize";
+import escapeHtml from "escape-html";
 
 export { CommandCategories, Command };
 
@@ -73,7 +75,10 @@ export const Commands = [
         args: "<message>",
         description: _td("slash_command|spoiler"),
         runFn: function (cli, roomId, threadId, message = "") {
-            return successSync(ContentHelpers.makeHtmlMessage(message, `<span data-mx-spoiler>${message}</span>`));
+            // Render Markdown inside the spoiler so formatting such as **bold** is kept.
+            // forceHTML means the result is always a string; the fallback only satisfies the type.
+            const html = htmlSerializeFromMdIfNeeded(message, { forceHTML: true }) ?? escapeHtml(message);
+            return successSync(ContentHelpers.makeHtmlMessage(message, `<span data-mx-spoiler>${html}</span>`));
         },
         category: CommandCategories.messages,
     }),
